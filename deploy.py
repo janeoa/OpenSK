@@ -513,7 +513,8 @@ class OpenSKInstaller:
       elf2tab_args.append("--verbose")
     stack_sizes = set()
     for arch, app_file in binary_names.items():
-      dest_file = os.path.join(self.tab_folder, f"{arch}.elf")
+      # dest_file = os.path.join(self.tab_folder, f"{arch}.elf")
+      dest_file = os.path.join(self.tab_folder, "cortex-m4.elf")
       print("dest_file: ", dest_file)
       print("boards_props.arch: ", arch)
       shutil.copyfile(app_file, dest_file)
@@ -534,13 +535,13 @@ class OpenSKInstaller:
         "--kernel-heap=1024", "--protected-region-size=96"
     ])
     print("full command: ", elf2tab_args)
-    if self.args.elf2tab_output:
-      output = self.checked_command_output(elf2tab_args)
-      print("elf2tab output: ", output)
-      self.args.elf2tab_output.write(output)
-    else:
-      print("checked command failed?")
-      self.checked_command(elf2tab_args)
+    # if self.args.elf2tab_output:
+    output = self.checked_command_output(elf2tab_args)
+    print("elf2tab output: ", output)
+    # self.args.elf2tab_output.write(output)
+    # else:
+    #   print("checked command failed?")
+    #   self.checked_command(elf2tab_args)
 
   def install_tab_file(self, tab_filename: str):
     """Calls Tockloader to install a TAB file."""
