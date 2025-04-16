@@ -96,6 +96,27 @@ OpenSKBoard = collections.namedtuple(
         "nordic_dfu",
     ])
 
+nrf5340dk_opensk_board = OpenSKBoard(
+    path="third_party/tock/boards/nordic/nrf5340dk_opensk",
+    arch="thumbv8m.main-none-eabi",
+    page_size=4096,
+    kernel_address=0,
+    padding_address=0x30000,
+    firmware_size=None,
+    metadata_address=None,
+    app_ldscript="nrf5340_layout.ld",
+    app_address=0x40000,
+    storage_address=0xC0000,
+    storage_size=0x14000,
+    pyocd_target="nrf5340",
+    openocd_board="nordic_nrf5340_dongle.cfg",
+    openocd_options=[],
+    openocd_commands={},
+    jlink_if="swd",
+    jlink_device="nrf5340_xxAA",
+    nordic_dfu=False,
+)
+
 nrf52840dk_opensk_board = OpenSKBoard(
     path="third_party/tock/boards/nordic/nrf52840dk_opensk",
     arch="thumbv7em-none-eabi",
@@ -118,6 +139,8 @@ nrf52840dk_opensk_board = OpenSKBoard(
 )
 
 SUPPORTED_BOARDS = {
+    "nrf5340dk_opensk":
+        nrf5340dk_opensk_board,
     "nrf52840dk_opensk":
         nrf52840dk_opensk_board,
     "nrf52840dk_opensk_a":
@@ -474,11 +497,14 @@ class OpenSKInstaller:
     if elf2tab_ver != "elf2tab 0.10.2":
       error(("Detected unsupported elf2tab version {elf2tab_ver!a}! The "
              "following commands may fail. Please use 0.10.2 instead."))
+    print("elf2tab dir: ", self.tab_folder)
     os.makedirs(self.tab_folder, exist_ok=True)
     tab_filename = os.path.join(self.tab_folder, f"{self.args.application}.tab")
+    print("tab_filename: ", tab_filename)
     supported_kernel = (2, 1)
     elf2tab_args = [
-        "elf2tab/bin/elf2tab", "--deterministic", "--package-name",
+      # "elf2tab/bin/elf2tab", "--verbose", "--deterministic", "--package-name",
+        "elf2tab", "--verbose", "--deterministic", "--package-name",
         self.args.application, f"--kernel-major={supported_kernel[0]}",
         f"--kernel-minor={supported_kernel[1]}", "-o", tab_filename
     ]
@@ -487,6 +513,8 @@ class OpenSKInstaller:
     stack_sizes = set()
     for arch, app_file in binary_names.items():
       dest_file = os.path.join(self.tab_folder, f"{arch}.elf")
+      print("dest_file: ", dest_file)
+      print("boards_props.arch: ", arch)
       shutil.copyfile(app_file, dest_file)
       elf2tab_args.append(dest_file)
       # extract required stack size directly from binary
@@ -504,10 +532,13 @@ class OpenSKInstaller:
         f"--stack={stack_sizes.pop()}", f"--app-heap={APP_HEAP_SIZE}",
         "--kernel-heap=1024", "--protected-region-size=96"
     ])
+    print("full command: ", elf2tab_args)
     if self.args.elf2tab_output:
       output = self.checked_command_output(elf2tab_args)
+      print("elf2tab output: ", output)
       self.args.elf2tab_output.write(output)
     else:
+      print("checked command failed?")
       self.checked_command(elf2tab_args)
 
   def install_tab_file(self, tab_filename: str):
