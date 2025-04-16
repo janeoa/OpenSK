@@ -97,7 +97,8 @@ OpenSKBoard = collections.namedtuple(
     ])
 
 nrf5340dk_opensk_board = OpenSKBoard(
-    path="third_party/tock/boards/nordic/nrf5340dk_opensk",
+    path="boards/nordic/nrf5340dk_opensk",
+    # path="third_party/tock/boards/nordic/nrf5340dk_opensk",
     arch="thumbv8m.main-none-eabi",
     page_size=4096,
     kernel_address=0,
