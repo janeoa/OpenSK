@@ -22,6 +22,9 @@ extern crate byteorder;
 extern crate core;
 extern crate lang_items;
 
+use libtock_console::Console;
+use core::fmt::Write;
+
 #[cfg(feature = "debug_ctap")]
 use core::fmt::Write;
 #[cfg(feature = "with_ctap1")]
@@ -120,6 +123,11 @@ impl EndpointReplies {
 }
 
 fn main() {
+    // debug!("I am in the main");
+    // writeln!(Console::writer(), "Hello main fn!").unwrap();
+
+    let mut writer = Console::<SyscallImplementation>::writer();
+
     #[cfg(feature = "debug_ctap")]
     let mut writer = Console::<SyscallImplementation>::writer();
     #[cfg(feature = "debug_ctap")]
@@ -128,6 +136,9 @@ fn main() {
     }
     // Setup USB driver.
     if !usb_ctap_hid::UsbCtapHid::<SyscallImplementation>::setup() {
+        // debug!("Failed to setup USB driver");
+        // writeln!(Console::writer(), "Cannon setup USB driver").unwrap();
+        writeln!(writer, "Cannon setup USB driver").unwrap();
         panic!("Cannot setup USB driver");
     }
 
