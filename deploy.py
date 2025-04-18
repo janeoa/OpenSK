@@ -532,8 +532,7 @@ class OpenSKInstaller:
     # (currently 0x60 = 96 bytes)
     elf2tab_args.extend([
         f"--stack={stack_sizes.pop()}", f"--app-heap={APP_HEAP_SIZE}",
-        "--kernel-heap=1024", "--protected-region-size=96"
-    ])
+        "--kernel-heap=1024"])
     print("full command: ", elf2tab_args)
     # if self.args.elf2tab_output:
     output = self.checked_command_output(elf2tab_args)
