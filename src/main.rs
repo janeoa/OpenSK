@@ -22,8 +22,8 @@ extern crate byteorder;
 extern crate core;
 extern crate lang_items;
 
-use libtock_console::Console;
-use core::fmt::Write;
+// use libtock_console::Console;
+// use core::fmt::Write;
 
 #[cfg(feature = "debug_ctap")]
 use core::fmt::Write;
@@ -126,7 +126,7 @@ fn main() {
     // debug!("I am in the main");
     // writeln!(Console::writer(), "Hello main fn!").unwrap();
 
-    let mut writer = Console::<SyscallImplementation>::writer();
+    // let mut writer = Console::<SyscallImplementation>::writer();
 
     #[cfg(feature = "debug_ctap")]
     let mut writer = Console::<SyscallImplementation>::writer();
