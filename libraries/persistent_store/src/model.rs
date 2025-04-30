@@ -16,7 +16,23 @@
 
 use crate::format::Format;
 use crate::{usize_to_nat, StoreError, StoreRatio, StoreResult, StoreUpdate};
+#[cfg(feature = "std")]
 use std::collections::HashMap;
+
+#[cfg(not(feature = "std"))]
+use alloc::collections::BTreeMap as HashMap;
+
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::boxed::Box;
+
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
 
 /// Models the mutable operations of a store.
 ///

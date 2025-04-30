@@ -13,7 +13,7 @@ edition = "2018"
 [target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))'.dependencies.libtock_runtime]
 path = "third_party/libtock-rs/runtime"
 default-features = false
-features = ["no_auto_layout", "no_debug_memop", "debug_ctap"]
+features = ["no_auto_layout", "debug_ctap", "alloc_init"]
 
 [dependencies]
 libtock_buttons = { path = "third_party/libtock-rs/apis/buttons" }
@@ -33,6 +33,7 @@ rand_core = "0.6.4"
 ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
+default = ["debug_ctap", "mock_storage", "debug_allocations"]
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
@@ -43,6 +44,8 @@ with_ctap1 = ["opensk/with_ctap1"]
 with_nfc = ["libtock_drivers/with_nfc"]
 vendor_hid = ["opensk/vendor_hid"]
 ed25519 = ["ed25519-compact", "opensk/ed25519"]
+mock_storage = ["persistent_store/mock_storage"]
+
 
 [dev-dependencies]
 enum-iterator = "0.6.0"
@@ -61,3 +64,7 @@ panic = "abort"
 lto = true # Link Time Optimization usually reduces size of binaries and static libraries
 opt-level = "z"
 codegen-units = 1
+
+[lints.rust]
+unused_imports = "allow"
+dead_code = "allow"

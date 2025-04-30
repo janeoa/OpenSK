@@ -14,6 +14,7 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use alloc::vec;
 use clock::TockClock;
 use core::convert::TryFrom;
 use core::marker::PhantomData;
@@ -38,31 +39,33 @@ use opensk::api::user_presence::{UserPresence, UserPresenceError, UserPresenceWa
 use opensk::ctap::status_code::{Ctap2StatusCode, CtapResult};
 use opensk::ctap::Channel;
 use opensk::env::Env;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 use persistent_store::BufferOptions;
 use persistent_store::{StorageResult, Store};
 use platform::DefaultConfig;
 use rand_core::{impls, CryptoRng, Error, RngCore};
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 mod buffer_upgrade_storage;
 mod clock;
 mod commands;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 mod phantom_buffer_storage;
 #[cfg(not(feature = "std"))]
 mod storage;
 mod storage_helper;
 mod upgrade_helper;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 pub type Storage<S, C> = storage::TockStorage<S, C>;
-#[cfg(feature = "std")]
+
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub type Storage<S, C> = phantom_buffer_storage::PhantomBufferStorage<S, C>;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 type UpgradeStorage<S, C> = storage::TockUpgradeStorage<S, C>;
-#[cfg(feature = "std")]
+
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 type UpgradeStorage<S, C> = buffer_upgrade_storage::BufferUpgradeStorage<S, C>;
 
 pub const AAGUID: &[u8; AAGUID_LENGTH] =
@@ -173,7 +176,7 @@ where
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config>(
 ) -> StorageResult<Storage<S, C>> {
     // Use the Nordic configuration.
@@ -197,7 +200,7 @@ pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allo
 /// # Panics
 ///
 /// - If called a second time.
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config>(
 ) -> StorageResult<Storage<S, C>> {
     // Make sure the storage was not already taken.
