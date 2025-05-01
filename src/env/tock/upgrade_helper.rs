@@ -15,9 +15,9 @@
 // For compiling with std outside of tests.
 #![cfg_attr(feature = "std", allow(dead_code))]
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 use crate::env::tock::buffer_upgrade_storage::BufferUpgradeStorage;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "mock_storage")))]
 use crate::env::tock::storage::TockUpgradeStorage;
 use arrayref::array_ref;
 use byteorder::{ByteOrder, LittleEndian};
@@ -46,8 +46,8 @@ pub fn check_metadata<
     S: Syscalls,
     C: platform::subscribe::Config + platform::allow_ro::Config,
 >(
-    #[cfg(not(feature = "std"))] upgrade_locations: &TockUpgradeStorage<S, C>,
-    #[cfg(feature = "std")] upgrade_locations: &BufferUpgradeStorage<S, C>,
+    #[cfg(not(any(feature = "std", feature = "mock_storage")))] upgrade_locations: &TockUpgradeStorage<S, C>,
+    #[cfg(any(feature = "std", feature = "mock_storage"))] upgrade_locations: &BufferUpgradeStorage<S, C>,
     public_key_bytes: &[u8],
     metadata: &[u8],
 ) -> StorageResult<()> {

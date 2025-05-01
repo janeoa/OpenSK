@@ -40,7 +40,7 @@ use alloc::vec;
 
 
 
-const PARTITION_LENGTH: usize = 0x41000;
+const PARTITION_LENGTH: usize = 0x8000;
 const METADATA_LENGTH: usize = 0x1000;
 
 pub struct BufferUpgradeStorage<

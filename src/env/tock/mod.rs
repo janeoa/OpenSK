@@ -51,7 +51,7 @@ mod clock;
 mod commands;
 #[cfg(any(feature = "std", feature= "mock_storage"))]
 mod phantom_buffer_storage;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "mock_storage")))]
 mod storage;
 mod storage_helper;
 mod upgrade_helper;
@@ -137,6 +137,7 @@ impl<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config> D
     ///
     /// - If called a second time.
     fn default() -> Self {
+        // writeln!(writer, );
         let rng = TockRng::default();
         // We rely on `take_storage` to ensure that this function is called only once.
         let storage = take_storage::<S, C>().unwrap();
@@ -181,7 +182,7 @@ pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allo
 ) -> StorageResult<Storage<S, C>> {
     // Use the Nordic configuration.
     const PAGE_SIZE: usize = 0x1000;
-    const NUM_PAGES: usize = 20;
+    const NUM_PAGES: usize = 3;
     let store = vec![0xff; NUM_PAGES * PAGE_SIZE].into_boxed_slice();
     let options = BufferOptions {
         word_size: 4,

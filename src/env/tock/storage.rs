@@ -39,6 +39,7 @@ unsafe fn read_slice(address: usize, length: usize) -> &'static [u8] {
     core::slice::from_raw_parts(address as *const u8, length)
 }
 
+#[cfg(not(feature = "mock_storage"))]
 pub struct TockStorage<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config> {
     word_size: usize,
     page_size: usize,
@@ -49,7 +50,7 @@ pub struct TockStorage<S: Syscalls, C: platform::subscribe::Config + platform::a
     s: PhantomData<S>,
     c: PhantomData<C>,
 }
-
+#[cfg(not(feature = "mock_storage"))]
 impl<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config> TockStorage<S, C> {
     /// Provides access to the embedded flash if available.
     ///
