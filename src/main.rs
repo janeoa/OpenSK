@@ -141,9 +141,11 @@ fn main() {
         writeln!(writer, "Cannon setup USB driver").unwrap();
         panic!("Cannot setup USB driver");
     }
-
+    writeln!(writer, "Before env default()").unwrap();
     let env = TockEnv::<SyscallImplementation>::default();
+    writeln!(writer, "After main env default()").unwrap();
     let mut ctap = opensk::Ctap::new(env);
+    writeln!(writer, "After ctap new()").unwrap();
 
     let mut led_counter = 0;
     let mut led_blink_timer =
@@ -165,7 +167,12 @@ fn main() {
         let mut usb_endpoint: Option<UsbEndpoint> = None;
         let mut pkt_request = [0; 64];
 
+        #[cfg(feature = "debug_ctap")]
+        writeln!(writer, "Checking for next packet").unwrap();
+
         if let Some(packet) = replies.next_packet() {
+            #[cfg(feature = "debug_ctap")]
+            writeln!(writer, "Sending packet").unwrap();
             let hid_connection = ctap.env().hid_connection();
             match hid_connection.send(&packet.packet, packet.endpoint) {
                 Err(Ctap2StatusCode::CTAP1_ERR_TIMEOUT) => {
@@ -189,16 +196,18 @@ fn main() {
                 Err(_) => panic!("Error on USB send"),
             }
         } else {
+            #[cfg(feature = "debug_ctap")]
+            writeln!(writer, "Receiving packet").unwrap();
             let hid_connection = ctap.env().hid_connection();
             usb_endpoint = match hid_connection.recv(&mut pkt_request, KEEPALIVE_DELAY_MS) {
-                Ok(RecvStatus::Timeout) => None,
+                Ok(RecvStatus::Timeout) => {
+                    #[cfg(feature = "debug_ctap")]
+                    writeln!(writer, "USB recv timeout").unwrap();
+                    None
+                }
                 Ok(RecvStatus::Received(endpoint)) => {
                     #[cfg(feature = "debug_ctap")]
-                    print_packet_notice::<SyscallImplementation>(
-                        "Received packet",
-                        ctap.env().clock().timestamp_us(),
-                        &mut writer,
-                    );
+                    writeln!(writer, "USB packet received").unwrap();
                     Some(endpoint)
                 }
                 Err(_) => panic!("Error on USB recv"),

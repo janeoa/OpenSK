@@ -33,7 +33,8 @@ rand_core = "0.6.4"
 ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
-default = ["debug_ctap", "mock_storage", "debug_allocations"]
+#default = ["debug_ctap", "mock_storage", "debug_allocations"]
+default = ["debug_ctap", "mock_storage"]
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
@@ -64,6 +65,7 @@ panic = "abort"
 lto = true # Link Time Optimization usually reduces size of binaries and static libraries
 opt-level = "z"
 codegen-units = 1
+debug = true
 
 [lints.rust]
 unused_imports = "allow"
