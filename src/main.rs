@@ -138,13 +138,17 @@ fn main() {
     if !usb_ctap_hid::UsbCtapHid::<SyscallImplementation>::setup() {
         // debug!("Failed to setup USB driver");
         // writeln!(Console::writer(), "Cannon setup USB driver").unwrap();
+        #[cfg(feature = "debug_ctap")]
         writeln!(writer, "Cannon setup USB driver").unwrap();
         panic!("Cannot setup USB driver");
     }
+    #[cfg(feature = "debug_ctap")]
     writeln!(writer, "Before env default()").unwrap();
     let env = TockEnv::<SyscallImplementation>::default();
+    #[cfg(feature = "debug_ctap")]
     writeln!(writer, "After main env default()").unwrap();
     let mut ctap = opensk::Ctap::new(env);
+    #[cfg(feature = "debug_ctap")]
     writeln!(writer, "After ctap new()").unwrap();
 
     let mut led_counter = 0;

@@ -34,7 +34,7 @@ ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
 #default = ["debug_ctap", "mock_storage", "debug_allocations"]
-default = ["debug_ctap", "mock_storage"]
+default = ["mock_storage"]
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
