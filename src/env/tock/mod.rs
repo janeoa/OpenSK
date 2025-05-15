@@ -104,20 +104,7 @@ impl<S: Syscalls> RngCore for TockRng<S> {
     }
 
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        {
-            let data = vec![0xAA, 0xBB, 0xCC, 0xDD]; // Example predefined data
-            let mut position = 0;
-        
-            for byte in dest.iter_mut() {
-                if position < data.len() {
-                    *byte = data[position];
-                    position += 1;
-                } else {
-                    *byte = 0; // Default to 0 if out of data
-                }
-            }
-        }
-        // rng::Rng::<S>::fill_buffer(dest);
+        rng::Rng::<S>::fill_buffer(dest);
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
