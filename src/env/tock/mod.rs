@@ -289,7 +289,6 @@ where
     }
 }
 
-#[allow(dead_code)]
 impl<S, C> UserPresence for TockEnv<S, C>
 where
     S: Syscalls,
@@ -315,8 +314,8 @@ where
 
         let result =
             UsbCtapHid::<S>::recv_with_buttons(packet, Duration::from_ms(timeout_ms as isize));
-        let (status, _button_touched) = match result {
-            Ok((status, _button_touched)) => (status, _button_touched),
+        let (status, button_touched) = match result {
+            Ok((status, button_touched)) => (status, button_touched),
             Err(_) => return Err(Ctap2StatusCode::CTAP2_ERR_VENDOR_HARDWARE_FAILURE),
         };
         let recv_status = match status {
@@ -328,12 +327,13 @@ where
                 RecvStatus::Received(UsbEndpoint::try_from(recv_endpoint as usize)?)
             }
         };
-        // let up_result = if button_touched || !button_touched {
-        //     Ok(())
-        // } else {
-        //     Err(UserPresenceError::Timeout)
-        // };
-        Ok((Ok(()), recv_status))
+
+        let up_result = if button_touched {
+            Ok(())
+        } else {
+            Err(UserPresenceError::Timeout)
+        };
+        Ok((up_result, recv_status))
     }
 
     fn check_complete(&mut self) {
