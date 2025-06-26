@@ -19,25 +19,36 @@ extern crate lang_items;
 
 use libtock_console::Console;
 use libtock_drivers::result::FlexUnwrap;
+use libtock_platform::Syscalls;
 use libtock_runtime::{set_main, stack_size, TockSyscalls};
+use core::fmt::Write;
 
 stack_size! {0x800}
 set_main! {main}
 
-type Syscalls = TockSyscalls;
+type S = TockSyscalls;
 
 fn main() {
+    const CAP_TOUCH_PIN: u32 = 0;  // P0_05 pin
+    // const THRESHOLD: u32 = 500;    // Threshold for touch detection
+    const CHARGE_TIME_US: u32 = 100; // Charge time in microseconds
+    // const POLL_INTERVAL_MS: u64 = 50; // Check every 50ms
+    const GPIO_DRIVER_NUM: u32 = 0x4;  // GPIO driver number
+
     // Write messages of length up to the console driver's buffer size.
-    let mut buf = [0; 1024];
+    // let mut buf = [0; 1024];
     loop {
-        for i in 1..buf.len() {
-            for byte in buf.iter_mut().take(i) {
-                *byte = b'0' + ((i % 10) as u8);
-            }
-            buf[i] = b'\n';
-            Console::<Syscalls>::write(&buf[..(i + 1)])
-                .map_err(|e| e.into())
-                .flex_unwrap();
+        let _ = S::command(GPIO_DRIVER_NUM, 1 /*ENABLE_OUTPUT*/, CAP_TOUCH_PIN, 0);
+        let _ = S::command(GPIO_DRIVER_NUM, 2 /*SET*/, CAP_TOUCH_PIN, 0);
+                
+        // let pin_config = 0x00100000; // Shift to position 0x00XX0000
+        let _ = S::command(GPIO_DRIVER_NUM, 5 /*ENABLE_INPUT*/, CAP_TOUCH_PIN, 0);        
+        let result = S::command(GPIO_DRIVER_NUM, 6 /*READ*/, CAP_TOUCH_PIN, 0);
+        
+        if result.is_success_u32() {
+            writeln!(Console::<S>::writer(), "Value before discharge: {}", result.get_success_u32().unwrap()).unwrap();
+        } else {
+            writeln!(Console::<S>::writer(), "Failed to read pin value before discharge").unwrap();        
         }
     }
 }

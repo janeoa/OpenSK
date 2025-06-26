@@ -48,7 +48,6 @@ use opensk::ctap::status_code::Ctap2StatusCode;
 use opensk::ctap::KEEPALIVE_DELAY_MS;
 use opensk::env::Env;
 use opensk::Transport;
-
 #[cfg(not(feature = "std"))]
 stack_size! {0x4000}
 #[cfg(not(feature = "std"))]
@@ -122,6 +121,7 @@ impl EndpointReplies {
     }
 }
 
+#[allow(dead_code, unreachable_code)]
 fn main() {
     // debug!("I am in the main");
     // writeln!(Console::writer(), "Hello main fn!").unwrap();
@@ -150,6 +150,26 @@ fn main() {
     let mut ctap = opensk::Ctap::new(env);
     #[cfg(feature = "debug_ctap")]
     writeln!(writer, "After ctap new()").unwrap();
+
+    // const CAP_TOUCH_PIN: u32 = 0; // P0_05 pin
+    // const CHARGE_TIME_US: u32 = 100; // Charge time in microseconds    
+    // const GPIO_DRIVER_NUM: u32 = 0x4; // GPIO driver number
+
+    // loop {
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 1 /*ENABLE_OUTPUT*/, CAP_TOUCH_PIN, 0);
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 2 /*SET*/, CAP_TOUCH_PIN, 0);
+    //     // Self::busy_wait_us(CHARGE_TIME_US);
+        
+    //     // let pin_config = 0x00100000; // Shift to position 0x00XX0000
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 5 /*ENABLE_INPUT*/, CAP_TOUCH_PIN, 0);        
+    //     let result = SyscallImplementation::command(GPIO_DRIVER_NUM, 6 /*READ*/, CAP_TOUCH_PIN, 0);
+        
+    //     if result.is_success_u32() {
+    //         writeln!(Console::<SyscallImplementation>::writer(), "Value before discharge: {}", result.get_success_u32().unwrap()).unwrap();
+    //     } else {
+    //         writeln!(Console::<SyscallImplementation>::writer(), "Failed to read pin value before discharge").unwrap();        
+    //     }
+    // }
 
     let mut led_counter = 0;
     let mut led_blink_timer =
