@@ -33,7 +33,7 @@ use core::convert::TryFrom;
 #[cfg(feature = "std")]
 use std::collections::HashSet;
 
-#[cfg(not(feature = "std"))]
+#[cfg(all(not(feature = "std"), feature = "mock_storage"))]
 use alloc::collections::BTreeSet as HashSet;
 
 /// Errors returned by store operations.

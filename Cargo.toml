@@ -13,7 +13,7 @@ edition = "2018"
 [target.'cfg(any(target_arch = "arm", target_arch = "riscv32"))'.dependencies.libtock_runtime]
 path = "third_party/libtock-rs/runtime"
 default-features = false
-features = ["no_auto_layout", "debug_ctap", "alloc_init"]
+features = ["no_auto_layout", "alloc_init"]
 
 [dependencies]
 libtock_buttons = { path = "third_party/libtock-rs/apis/buttons" }
@@ -33,7 +33,7 @@ rand_core = "0.6.4"
 ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
-default = ["mock_storage"]
+default = []
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
