@@ -33,7 +33,7 @@ rand_core = "0.6.4"
 ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
-default = []
+default = ["mock_button", "mock_storage", "mock_rng"]
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
@@ -45,7 +45,8 @@ with_nfc = ["libtock_drivers/with_nfc"]
 vendor_hid = ["opensk/vendor_hid"]
 ed25519 = ["ed25519-compact", "opensk/ed25519"]
 mock_storage = ["persistent_store/mock_storage"]
-
+mock_button = ["libtock_drivers/mock_button"]
+mock_rng = []
 
 [dev-dependencies]
 enum-iterator = "0.6.0"

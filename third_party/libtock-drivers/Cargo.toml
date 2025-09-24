@@ -18,3 +18,4 @@ libtock_platform = { path = "../../third_party/libtock-rs/platform" }
 debug_ctap = []
 verbose_usb = ["debug_ctap"]
 with_nfc = []
+mock_button = []

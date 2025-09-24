@@ -26,6 +26,7 @@ use libtock_platform::{share, DefaultConfig, ErrorCode, Syscalls};
 use platform::share::Handle;
 use platform::subscribe::OneId;
 use platform::{AllowRo, AllowRw, Subscribe, Upcall};
+#[cfg(not(feature = "mock_button"))]
 use libtock_buttons::{ButtonListener, ButtonState, Buttons};
 
 const DRIVER_NUMBER: u32 = 0x20009;
@@ -98,12 +99,6 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
     /// Can be called even if there was no previously registered listener.
     fn unregister_listener(subscribe_num: u32) {
         S::unsubscribe(DRIVER_NUMBER, subscribe_num);
-    }
-    #[allow(unused)]
-    fn busy_wait_us(us: u32) {
-        for _ in 0..us*10 {
-            unsafe { core::arch::asm!("nop") };
-        }
     }
 
     /// Checks whether the driver is available and tries to setup the connection.
@@ -365,16 +360,25 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
 
         status
     }
-    #[allow(unused)]
+
+    #[cfg(feature = "mock_button")]
+    pub fn recv_with_buttons(
+        _buf: &mut [u8; 64],
+        _timeout_delay: Duration<isize>,
+    ) -> TockResult<(SendOrRecvStatus, bool)> {
+        Ok((SendOrRecvStatus::Timeout, false))
+    }
+
+    #[cfg(not(feature = "mock_button"))]
     pub fn recv_with_buttons(
         buf: &mut [u8; 64],
         timeout_delay: Duration<isize>,
     ) -> TockResult<(SendOrRecvStatus, bool)> {
-        const CAP_TOUCH_PIN: u32 = 0; // P0_05 pin
-        const NUM_SAMPLES: u32 = 5;
-        const TOUCH_THRESHOLD: u32 = 3;        
-        const CHARGE_TIME_US: u32 = 10; // Charge time in microseconds
-        const GPIO_DRIVER_NUM: u32 = 0x4; // GPIO driver number
+        // const CAP_TOUCH_PIN: u32 = 0; // P0_05 pin
+        // const NUM_SAMPLES: u32 = 5;
+        // const TOUCH_THRESHOLD: u32 = 3;        
+        // const CHARGE_TIME_US: u32 = 10; // Charge time in microseconds
+        // const GPIO_DRIVER_NUM: u32 = 0x4; // GPIO driver number
         let status: Cell<Option<SendOrRecvStatus>> = Cell::new(None);
 
         let alarm = UsbCtapHidListener(|direction, endpoint| match direction {
@@ -398,7 +402,6 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
                 ButtonState::Released => (),
             };
         });
-     
 
         let mut timeout_callback =
             timer::with_callback::<S, C, _>(|_| status.set(Some(SendOrRecvStatus::Timeout)));
@@ -426,41 +429,6 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
                 .map_err(|_| ErrorCode::Fail)?;
             
             S::command(DRIVER_NUMBER, command_nr::RECEIVE, 0, 0).to_result::<(), ErrorCode>()?;
-            // Util::<S>::yieldk_for(|| {
-            //     let mut touch_count = 0;
-                
-            //     for _ in 0..NUM_SAMPLES {
-            //         let _ = S::command(GPIO_DRIVER_NUM, 1 /*ENABLE_OUTPUT*/, CAP_TOUCH_PIN, 0);
-            //         let _ = S::command(GPIO_DRIVER_NUM, 2 /*SET*/, CAP_TOUCH_PIN, 0);
-            //         Self::busy_wait_us(CHARGE_TIME_US);
-                    
-            //         // Step 2: Switch to input mode (high-Z for discharge)
-            //         let _ = S::command(GPIO_DRIVER_NUM, 5 /*ENABLE_INPUT*/, CAP_TOUCH_PIN, 0);        
-            //         let result = S::command(GPIO_DRIVER_NUM, 6 /*READ*/, CAP_TOUCH_PIN, 0);
-                    
-            //         if result.is_success_u32() {
-            //             let value = result.get_success_u32().unwrap();
-            //             touch_count += value;
-
-            //         }
-            //     }
-                
-            //     // Determine if touched based on threshold
-            //     if touch_count >= TOUCH_THRESHOLD {
-            //         button_touched.set(true);
-            //         writeln!(Console::<S>::writer(), "Touch detected! ({}/{} samples above threshold)", 
-            //         touch_count, NUM_SAMPLES).unwrap();
-            //     } else {
-            //         button_touched.set(false);
-            //         writeln!(Console::<S>::writer(), "No touch detected! ({}/{} samples above threshold)", 
-            //         touch_count, NUM_SAMPLES).unwrap();
-            //     }
-                
-            //     // Return true if button is touched or status is set
-            //     button_touched.get() || status.get().is_some()
-            // });
-            
-
         
             Util::<S>::yieldk_for(|| button_touched.get() || status.get().is_some());
             Self::unregister_listener(subscribe_nr::RECEIVE);

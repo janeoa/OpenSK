@@ -103,31 +103,26 @@ impl<S: Syscalls> RngCore for TockRng<S> {
         impls::next_u64_via_fill(self)
     }
 
+    #[cfg(not(feature = "mock_rng"))]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
-        // {
-
-        //     let data = vec![0xAA, 0xBB, 0xCC, 0xDD]; // Example predefined data
-            
-        //     let mut position = 0;
-            
-        //     for byte in dest.iter_mut() {
-            
-        //         if position < data.len() {
-                
-        //         *byte = data[position];
-                
-        //         position += 1;
-                
-        //         } else {
-                
-        //         *byte = 0; // Default to 0 if out of data
-                
-        //         }
-            
-        //     }
-            
-        // }
         rng::Rng::<S>::fill_buffer(dest);
+    }
+
+    #[cfg(feature = "mock_rng")]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        {
+            let data = vec![0xAA, 0xBB, 0xCC, 0xDD]; // Example predefined data   
+            let mut position = 0;
+            for byte in dest.iter_mut() {
+                if position < data.len() {
+                    *byte = data[position];
+                    position += 1;
+                }
+                else {
+                    *byte = 0; // Default to 0 if out of data
+                }
+            }
+        }
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -320,7 +315,8 @@ where
     fn check_init(&mut self) {
         self.blink_pattern = 0;
     }
-
+    
+    #[allow(unused)]
     fn wait_with_timeout(
         &mut self,
         packet: &mut [u8; 64],
@@ -351,11 +347,18 @@ where
             }
         };
 
+
+        #[cfg(feature = "mock_button")]
+        return Ok((Ok(()), recv_status));
+
+        #[cfg(not(feature = "mock_button"))]
         let up_result = if button_touched {
             Ok(())
         } else {
             Err(UserPresenceError::Timeout)
         };
+
+        #[cfg(not(feature = "mock_button"))]
         Ok((up_result, recv_status))
     }
 
