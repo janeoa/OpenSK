@@ -18,9 +18,9 @@ use crate::format::{
     is_erased, CompactInfo, Format, Header, InitInfo, InternalEntry, Padding, ParsedWord, Position,
     Word, WordState,
 };
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub use crate::model::StoreOperation;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub use crate::BufferStorage;
 use crate::{usize_to_nat, Nat, Storage, StorageError, StorageIndex};
 use alloc::borrow::Cow;
@@ -29,8 +29,12 @@ use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::cmp::{max, min, Ordering};
 use core::convert::TryFrom;
+
 #[cfg(feature = "std")]
 use std::collections::HashSet;
+
+#[cfg(all(not(feature = "std"), feature = "mock_storage"))]
+use alloc::collections::BTreeSet as HashSet;
 
 /// Errors returned by store operations.
 #[derive(Debug, PartialEq, Eq)]
@@ -1150,7 +1154,7 @@ impl<S: Storage> Store<S> {
 }
 
 // Those functions are not meant for production.
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 impl Store<BufferStorage> {
     /// Returns the storage configuration.
     pub fn format(&self) -> &Format {

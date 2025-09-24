@@ -27,6 +27,7 @@ default-features = false
 features = ["const_mut_refs"]
 
 [features]
+default = ["panic_console"]
 debug_allocations = []
 panic_console = []
 std = []

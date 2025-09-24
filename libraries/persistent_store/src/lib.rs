@@ -361,7 +361,7 @@
 #[macro_use]
 extern crate alloc;
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 mod buffer;
 pub mod concat;
 #[cfg(feature = "std")]
@@ -371,14 +371,14 @@ mod file;
 mod format;
 pub mod fragment;
 mod linear;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 mod model;
 mod storage;
 mod store;
 #[cfg(test)]
 mod test;
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub use self::buffer::{BufferCorruptFunction, BufferOptions, BufferStorage};
 #[cfg(feature = "std")]
 pub use self::driver::{
@@ -387,7 +387,7 @@ pub use self::driver::{
 #[cfg(feature = "std")]
 pub use self::file::{FileOptions, FileStorage};
 pub use self::linear::Linear;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub use self::model::{StoreModel, StoreOperation};
 pub use self::storage::{Storage, StorageError, StorageIndex, StorageResult};
 pub use self::store::{

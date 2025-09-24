@@ -17,15 +17,16 @@ use crate::timer::Duration;
 use crate::util::Util;
 use crate::{timer, util};
 use core::cell::Cell;
-#[cfg(feature = "debug_ctap")]
-use core::fmt::Write;
-#[cfg(feature = "debug_ctap")]
-use libtock_console::Console;
+// #[cfg(feature = "debug_ctap")]
+// use core::fmt::Write;
+// #[cfg(feature = "debug_ctap")]
+// use libtock_console::Console;
 use libtock_platform as platform;
 use libtock_platform::{share, DefaultConfig, ErrorCode, Syscalls};
 use platform::share::Handle;
 use platform::subscribe::OneId;
 use platform::{AllowRo, AllowRw, Subscribe, Upcall};
+#[cfg(not(feature = "mock_button"))]
 use libtock_buttons::{ButtonListener, ButtonState, Buttons};
 
 const DRIVER_NUMBER: u32 = 0x20009;
@@ -360,10 +361,24 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
         status
     }
 
+    #[cfg(feature = "mock_button")]
+    pub fn recv_with_buttons(
+        _buf: &mut [u8; 64],
+        _timeout_delay: Duration<isize>,
+    ) -> TockResult<(SendOrRecvStatus, bool)> {
+        Ok((SendOrRecvStatus::Timeout, false))
+    }
+
+    #[cfg(not(feature = "mock_button"))]
     pub fn recv_with_buttons(
         buf: &mut [u8; 64],
         timeout_delay: Duration<isize>,
     ) -> TockResult<(SendOrRecvStatus, bool)> {
+        // const CAP_TOUCH_PIN: u32 = 0; // P0_05 pin
+        // const NUM_SAMPLES: u32 = 5;
+        // const TOUCH_THRESHOLD: u32 = 3;        
+        // const CHARGE_TIME_US: u32 = 10; // Charge time in microseconds
+        // const GPIO_DRIVER_NUM: u32 = 0x4; // GPIO driver number
         let status: Cell<Option<SendOrRecvStatus>> = Cell::new(None);
 
         let alarm = UsbCtapHidListener(|direction, endpoint| match direction {
@@ -412,9 +427,9 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
             timeout
                 .set_alarm(timeout_delay)
                 .map_err(|_| ErrorCode::Fail)?;
-
+            
             S::command(DRIVER_NUMBER, command_nr::RECEIVE, 0, 0).to_result::<(), ErrorCode>()?;
-
+        
             Util::<S>::yieldk_for(|| button_touched.get() || status.get().is_some());
             Self::unregister_listener(subscribe_nr::RECEIVE);
             Buttons::<S>::unregister_listener();
@@ -472,6 +487,7 @@ impl<S: Syscalls, C: Config> UsbCtapHid<S, C> {
                 Err(e) => panic!("Unexpected error when cancelling USB receive: {:?}", e),
             }
         }
+
 
         status.map(|s| (s, button_touched.get()))
     }

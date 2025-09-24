@@ -22,6 +22,9 @@ extern crate byteorder;
 extern crate core;
 extern crate lang_items;
 
+// use libtock_console::Console;
+// use core::fmt::Write;
+
 #[cfg(feature = "debug_ctap")]
 use core::fmt::Write;
 #[cfg(feature = "with_ctap1")]
@@ -45,7 +48,6 @@ use opensk::ctap::status_code::Ctap2StatusCode;
 use opensk::ctap::KEEPALIVE_DELAY_MS;
 use opensk::env::Env;
 use opensk::Transport;
-
 #[cfg(not(feature = "std"))]
 stack_size! {0x4000}
 #[cfg(not(feature = "std"))]
@@ -119,7 +121,13 @@ impl EndpointReplies {
     }
 }
 
+#[allow(dead_code, unreachable_code)]
 fn main() {
+    // debug!("I am in the main");
+    // writeln!(Console::writer(), "Hello main fn!").unwrap();
+
+    // let mut writer = Console::<SyscallImplementation>::writer();
+
     #[cfg(feature = "debug_ctap")]
     let mut writer = Console::<SyscallImplementation>::writer();
     #[cfg(feature = "debug_ctap")]
@@ -128,11 +136,40 @@ fn main() {
     }
     // Setup USB driver.
     if !usb_ctap_hid::UsbCtapHid::<SyscallImplementation>::setup() {
+        // debug!("Failed to setup USB driver");
+        // writeln!(Console::writer(), "Cannon setup USB driver").unwrap();
+        #[cfg(feature = "debug_ctap")]
+        writeln!(writer, "Cannon setup USB driver").unwrap();
         panic!("Cannot setup USB driver");
     }
-
+    #[cfg(feature = "debug_ctap")]
+    writeln!(writer, "Before env default()").unwrap();
     let env = TockEnv::<SyscallImplementation>::default();
+    #[cfg(feature = "debug_ctap")]
+    writeln!(writer, "After main env default()").unwrap();
     let mut ctap = opensk::Ctap::new(env);
+    #[cfg(feature = "debug_ctap")]
+    writeln!(writer, "After ctap new()").unwrap();
+
+    // const CAP_TOUCH_PIN: u32 = 0; // P0_05 pin
+    // const CHARGE_TIME_US: u32 = 100; // Charge time in microseconds    
+    // const GPIO_DRIVER_NUM: u32 = 0x4; // GPIO driver number
+
+    // loop {
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 1 /*ENABLE_OUTPUT*/, CAP_TOUCH_PIN, 0);
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 2 /*SET*/, CAP_TOUCH_PIN, 0);
+    //     // Self::busy_wait_us(CHARGE_TIME_US);
+        
+    //     // let pin_config = 0x00100000; // Shift to position 0x00XX0000
+    //     let _ = SyscallImplementation::command(GPIO_DRIVER_NUM, 5 /*ENABLE_INPUT*/, CAP_TOUCH_PIN, 0);        
+    //     let result = SyscallImplementation::command(GPIO_DRIVER_NUM, 6 /*READ*/, CAP_TOUCH_PIN, 0);
+        
+    //     if result.is_success_u32() {
+    //         writeln!(Console::<SyscallImplementation>::writer(), "Value before discharge: {}", result.get_success_u32().unwrap()).unwrap();
+    //     } else {
+    //         writeln!(Console::<SyscallImplementation>::writer(), "Failed to read pin value before discharge").unwrap();        
+    //     }
+    // }
 
     let mut led_counter = 0;
     let mut led_blink_timer =
@@ -154,7 +191,12 @@ fn main() {
         let mut usb_endpoint: Option<UsbEndpoint> = None;
         let mut pkt_request = [0; 64];
 
+        #[cfg(feature = "debug_ctap")]
+        writeln!(writer, "Checking for next packet").unwrap();
+
         if let Some(packet) = replies.next_packet() {
+            #[cfg(feature = "debug_ctap")]
+            writeln!(writer, "Sending packet").unwrap();
             let hid_connection = ctap.env().hid_connection();
             match hid_connection.send(&packet.packet, packet.endpoint) {
                 Err(Ctap2StatusCode::CTAP1_ERR_TIMEOUT) => {
@@ -178,16 +220,18 @@ fn main() {
                 Err(_) => panic!("Error on USB send"),
             }
         } else {
+            #[cfg(feature = "debug_ctap")]
+            writeln!(writer, "Receiving packet").unwrap();
             let hid_connection = ctap.env().hid_connection();
             usb_endpoint = match hid_connection.recv(&mut pkt_request, KEEPALIVE_DELAY_MS) {
-                Ok(RecvStatus::Timeout) => None,
+                Ok(RecvStatus::Timeout) => {
+                    #[cfg(feature = "debug_ctap")]
+                    writeln!(writer, "USB recv timeout").unwrap();
+                    None
+                }
                 Ok(RecvStatus::Received(endpoint)) => {
                     #[cfg(feature = "debug_ctap")]
-                    print_packet_notice::<SyscallImplementation>(
-                        "Received packet",
-                        ctap.env().clock().timestamp_us(),
-                        &mut writer,
-                    );
+                    writeln!(writer, "USB packet received").unwrap();
                     Some(endpoint)
                 }
                 Err(_) => panic!("Error on USB recv"),

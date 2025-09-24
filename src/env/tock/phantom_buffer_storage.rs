@@ -20,6 +20,24 @@ use persistent_store::{
     BufferCorruptFunction, BufferOptions, BufferStorage, Storage, StorageIndex, StorageResult,
 };
 
+#[cfg(feature = "std")]
+use std::collections::HashMap;
+
+#[cfg(not(feature = "std"))]
+use alloc::collections::BTreeMap as HashMap;
+
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::boxed::Box;
+
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+
 /// Wrapper with phantom data for the test storage implementation.
 pub struct PhantomBufferStorage<
     S: Syscalls,

@@ -20,7 +20,27 @@ use libtock_platform::Syscalls;
 use persistent_store::{StorageError, StorageResult};
 use platform::DefaultConfig;
 
-const PARTITION_LENGTH: usize = 0x41000;
+#[cfg(feature = "std")]
+use std::collections::HashMap;
+
+#[cfg(not(feature = "std"))]
+use alloc::collections::BTreeMap as HashMap;
+
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::vec;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+
+
+
+const PARTITION_LENGTH: usize = 0x8000;
 const METADATA_LENGTH: usize = 0x1000;
 
 pub struct BufferUpgradeStorage<

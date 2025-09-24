@@ -12,3 +12,4 @@ tempfile = "3"
 
 [features]
 std = []
+mock_storage = []

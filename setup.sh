@@ -23,7 +23,7 @@ PIP="$PY_VENV_NAME"/bin/pip
 set -e
 
 # Ensure the submodules are pulled and up-to-date, and apply patches
-./setup-submodules.sh
+# ./setup-submodules.sh
 
 # Check that rustup and pip3 are installed
 check_command () {

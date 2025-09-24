@@ -14,6 +14,7 @@
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
+use alloc::vec;
 use clock::TockClock;
 use core::convert::TryFrom;
 use core::marker::PhantomData;
@@ -38,31 +39,33 @@ use opensk::api::user_presence::{UserPresence, UserPresenceError, UserPresenceWa
 use opensk::ctap::status_code::{Ctap2StatusCode, CtapResult};
 use opensk::ctap::Channel;
 use opensk::env::Env;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 use persistent_store::BufferOptions;
 use persistent_store::{StorageResult, Store};
 use platform::DefaultConfig;
 use rand_core::{impls, CryptoRng, Error, RngCore};
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 mod buffer_upgrade_storage;
 mod clock;
 mod commands;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 mod phantom_buffer_storage;
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature = "mock_storage")))]
 mod storage;
 mod storage_helper;
 mod upgrade_helper;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 pub type Storage<S, C> = storage::TockStorage<S, C>;
-#[cfg(feature = "std")]
+
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub type Storage<S, C> = phantom_buffer_storage::PhantomBufferStorage<S, C>;
 
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 type UpgradeStorage<S, C> = storage::TockUpgradeStorage<S, C>;
-#[cfg(feature = "std")]
+
+#[cfg(any(feature = "std", feature= "mock_storage"))]
 type UpgradeStorage<S, C> = buffer_upgrade_storage::BufferUpgradeStorage<S, C>;
 
 pub const AAGUID: &[u8; AAGUID_LENGTH] =
@@ -100,8 +103,26 @@ impl<S: Syscalls> RngCore for TockRng<S> {
         impls::next_u64_via_fill(self)
     }
 
+    #[cfg(not(feature = "mock_rng"))]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         rng::Rng::<S>::fill_buffer(dest);
+    }
+
+    #[cfg(feature = "mock_rng")]
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        {
+            let data = vec![0xAA, 0xBB, 0xCC, 0xDD]; // Example predefined data   
+            let mut position = 0;
+            for byte in dest.iter_mut() {
+                if position < data.len() {
+                    *byte = data[position];
+                    position += 1;
+                }
+                else {
+                    *byte = 0; // Default to 0 if out of data
+                }
+            }
+        }
     }
 
     fn try_fill_bytes(&mut self, dest: &mut [u8]) -> Result<(), Error> {
@@ -134,6 +155,7 @@ impl<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config> D
     ///
     /// - If called a second time.
     fn default() -> Self {
+        // writeln!(writer, );
         let rng = TockRng::default();
         // We rely on `take_storage` to ensure that this function is called only once.
         let storage = take_storage::<S, C>().unwrap();
@@ -173,12 +195,12 @@ where
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "mock_storage"))]
 pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config>(
 ) -> StorageResult<Storage<S, C>> {
     // Use the Nordic configuration.
     const PAGE_SIZE: usize = 0x1000;
-    const NUM_PAGES: usize = 20;
+    const NUM_PAGES: usize = 3;
     let store = vec![0xff; NUM_PAGES * PAGE_SIZE].into_boxed_slice();
     let options = BufferOptions {
         word_size: 4,
@@ -197,7 +219,7 @@ pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allo
 /// # Panics
 ///
 /// - If called a second time.
-#[cfg(not(feature = "std"))]
+#[cfg(not(any(feature = "std", feature= "mock_storage")))]
 pub fn take_storage<S: Syscalls, C: platform::subscribe::Config + platform::allow_ro::Config>(
 ) -> StorageResult<Storage<S, C>> {
     // Make sure the storage was not already taken.
@@ -293,7 +315,8 @@ where
     fn check_init(&mut self) {
         self.blink_pattern = 0;
     }
-
+    
+    #[allow(unused)]
     fn wait_with_timeout(
         &mut self,
         packet: &mut [u8; 64],
@@ -323,11 +346,19 @@ where
                 RecvStatus::Received(UsbEndpoint::try_from(recv_endpoint as usize)?)
             }
         };
+
+
+        #[cfg(feature = "mock_button")]
+        return Ok((Ok(()), recv_status));
+
+        #[cfg(not(feature = "mock_button"))]
         let up_result = if button_touched {
             Ok(())
         } else {
             Err(UserPresenceError::Timeout)
         };
+
+        #[cfg(not(feature = "mock_button"))]
         Ok((up_result, recv_status))
     }
 
