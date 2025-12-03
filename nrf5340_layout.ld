@@ -10,7 +10,7 @@ MEMORY {
    * RAM (W) : ORIGIN = 0x20020000, LENGTH = 128K
    * Here is updated for the nRF5340
   */
-  FLASH (X) : ORIGIN = 0x00040040, LENGTH = 0x000BFFC0 /* 1 MB - 256 KB - 64 bytes */
+  FLASH (X) : ORIGIN = 0x00080040, LENGTH = 0x000BFFC0 /* 1 MB - 256 KB - 64 bytes */
   RAM (W) : ORIGIN = 0x20020000, LENGTH = 384K /* 512 KB - 128 KB reserved for kernel */
 }
 

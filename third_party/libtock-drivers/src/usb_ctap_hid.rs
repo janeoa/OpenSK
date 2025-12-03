@@ -17,10 +17,10 @@ use crate::timer::Duration;
 use crate::util::Util;
 use crate::{timer, util};
 use core::cell::Cell;
-// #[cfg(feature = "debug_ctap")]
-// use core::fmt::Write;
-// #[cfg(feature = "debug_ctap")]
-// use libtock_console::Console;
+#[cfg(feature = "debug_ctap")]
+use core::fmt::Write;
+#[cfg(feature = "debug_ctap")]
+use libtock_console::Console;
 use libtock_platform as platform;
 use libtock_platform::{share, DefaultConfig, ErrorCode, Syscalls};
 use platform::share::Handle;

@@ -24,7 +24,8 @@ use alloc::string::String;
 use alloc::vec::Vec;
 #[cfg(feature = "config_command")]
 use sk_cbor::cbor_array_vec;
-
+#[cfg(feature = "storage_diag")]
+use core::fmt::Write;
 /// Initializes the store by creating missing objects.
 pub fn init(env: &mut impl Env) -> CtapResult<()> {
     env.persist().init()?;
@@ -109,6 +110,18 @@ pub fn store_credential<E: Env>(
     iter_result?;
     let max_supported_resident_keys = env.customization().max_supported_resident_keys();
     if old_key.is_none() && count_credentials(env)? >= max_supported_resident_keys {
+        #[cfg(feature = "storage_diag")]
+        {
+            // Print diagnostics when attempting to exceed capacity.
+            let used = count_credentials(env).unwrap_or(0);
+            let mut w = env.write();
+            let _ = writeln!(
+                w,
+                "[diag] Resident credentials full: used={} / cap={} (remaining=0)",
+                used,
+                max_supported_resident_keys
+            );
+        }
         return Err(Ctap2StatusCode::CTAP2_ERR_KEY_STORE_FULL);
     }
     let key = match old_key {
@@ -121,6 +134,20 @@ pub fn store_credential<E: Env>(
     let wrap_key = env.key_store().wrap_key::<E>()?;
     let value = serialize_credential::<E>(env, &wrap_key, new_credential)?;
     env.persist().write_credential_bytes(key, &value)?;
+
+    #[cfg(feature = "storage_diag")]
+    {
+        // After successful store, print remaining logical capacity.
+        let used = count_credentials(env).unwrap_or(0);
+        let cap = max_supported_resident_keys;
+        let remaining = cap.saturating_sub(used);
+        let mut w = env.write();
+        let _ = writeln!(
+            w,
+            "[diag] Resident credentials: used={} remaining={} (cap={})",
+            used, remaining, cap
+        );
+    }
     Ok(())
 }
 

@@ -33,10 +33,11 @@ rand_core = "0.6.4"
 ed25519-compact = { version = "1", default-features = false, optional = true }
 
 [features]
-default = ["mock_button", "mock_storage", "mock_rng"]
+default = ["mock_button"]
 config_command = ["opensk/config_command"]
 debug_allocations = ["lang_items/debug_allocations"]
 debug_ctap = ["libtock_drivers/debug_ctap", "opensk/debug_ctap"]
+storage_diag = ["opensk/storage_diag"]
 panic_console = ["lang_items/panic_console"]
 std = ["lang_items/std", "persistent_store/std", "opensk/std", "libtock_unittest"]
 verbose = ["debug_ctap", "libtock_drivers/verbose_usb"]
